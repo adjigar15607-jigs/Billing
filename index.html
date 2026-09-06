@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jigar Gandhi - Advocate Billing</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="style.css"></head>
+<body>
+<header><div><h1>JIGAR GANDHI</h1><p>Advocate Billing & Accounts</p></div><button id="logout" class="hidden" onclick="logout()">Logout</button></header>
+<main>
+<section id="login" class="card"><h2>Cloud Login</h2><input id="email" type="email" placeholder="Email"><input id="password" type="password" placeholder="Password"><button onclick="login()">Login</button><p id="loginMsg"></p></section>
+<section id="app" class="hidden">
+<nav><button onclick="tab('dashboard')">Dashboard</button><button onclick="tab('clients')">Clients</button><button onclick="tab('bills')">Bills</button><button onclick="tab('receipts')">Receipts</button><button onclick="tab('expenses')">Expenses</button><button onclick="tab('ledger')">Ledger</button><button onclick="tab('reports')">Reports</button></nav>
+<div id="content" class="card"></div></section></main>
+<footer>Chachariya NO, Mamlatdar Office Road, Patan (N.G.), 384264 · 95127-15607 · jkgandhiassociate@gmail.com</footer>
+<script src="app.js"></script></body></html>
