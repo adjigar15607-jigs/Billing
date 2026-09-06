@@ -1,14 +1,79 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Jigar Gandhi - Advocate Billing</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="style.css"></head>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Advocate Billing</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{background:#18243a;color:white;padding:20px 24px}header h1{margin:0;font-size:24px}
+.container{max-width:1100px;margin:24px auto;padding:0 16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{background:white;border-radius:14px;padding:20px;box-shadow:0 2px 12px #0000000d;margin-bottom:18px}
+.stat{font-size:28px;font-weight:700;margin-top:8px}.muted{color:#667085}
+label{display:block;font-weight:600;margin:12px 0 6px}input,select,textarea{width:100%;padding:11px;border:1px solid #d7dce5;border-radius:9px;font-size:15px}
+button{border:0;border-radius:9px;padding:11px 16px;background:#2563eb;color:white;font-weight:600;cursor:pointer}
+button.secondary{background:#e8eefc;color:#174ea6}.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:11px;border-bottom:1px solid #edf0f5}th{font-size:13px;color:#667085}
+.total{font-size:20px;font-weight:700;text-align:right;margin-top:14px}
+@media(max-width:600px){.container{margin:12px auto}.card{padding:15px}}
+</style>
+</head>
 <body>
-<header><div><h1>JIGAR GANDHI</h1><p>Advocate Billing & Accounts</p></div><button id="logout" class="hidden" onclick="logout()">Logout</button></header>
-<main>
-<section id="login" class="card"><h2>Cloud Login</h2><input id="email" type="email" placeholder="Email"><input id="password" type="password" placeholder="Password"><button onclick="login()">Login</button><p id="loginMsg"></p></section>
-<section id="app" class="hidden">
-<nav><button onclick="tab('dashboard')">Dashboard</button><button onclick="tab('clients')">Clients</button><button onclick="tab('bills')">Bills</button><button onclick="tab('receipts')">Receipts</button><button onclick="tab('expenses')">Expenses</button><button onclick="tab('ledger')">Ledger</button><button onclick="tab('reports')">Reports</button></nav>
-<div id="content" class="card"></div></section></main>
-<footer>Chachariya NO, Mamlatdar Office Road, Patan (N.G.), 384264 · 95127-15607 · jkgandhiassociate@gmail.com</footer>
-<script src="app.js"></script></body></html>
+<header><h1>⚖️ Advocate Billing</h1></header>
+<div class="container">
+<div class="grid">
+<div class="card"><div class="muted">Total Invoices</div><div id="invoiceCount" class="stat">0</div></div>
+<div class="card"><div class="muted">Billed</div><div id="billed" class="stat">₹0</div></div>
+<div class="card"><div class="muted">Paid</div><div id="paid" class="stat">₹0</div></div>
+<div class="card"><div class="muted">Outstanding</div><div id="outstanding" class="stat">₹0</div></div>
+</div>
+
+<div class="card">
+<h2>New Bill</h2>
+<div class="row">
+<div><label>Client</label><input id="client" placeholder="Client name"></div>
+<div><label>Case / Matter</label><input id="matter" placeholder="Case number or matter"></div>
+<div><label>Date</label><input id="date" type="date"></div>
+</div>
+<div class="row">
+<div><label>Professional Fee (₹)</label><input id="fee" type="number" min="0" value="0"></div>
+<div><label>Expenses (₹)</label><input id="expenses" type="number" min="0" value="0"></div>
+<div><label>GST %</label><input id="gst" type="number" min="0" value="18"></div>
+</div>
+<br><button onclick="addInvoice()">Create Bill</button>
+</div>
+
+<div class="card">
+<h2>Invoices</h2>
+<div style="overflow:auto">
+<table><thead><tr><th>Invoice</th><th>Client</th><th>Matter</th><th>Date</th><th>Total</th><th>Status</th><th></th></tr></thead>
+<tbody id="list"></tbody></table>
+</div>
+</div>
+</div>
+<script>
+const KEY="advocate_billing_invoices";
+let invoices=JSON.parse(localStorage.getItem(KEY)||"[]");
+document.getElementById("date").valueAsDate=new Date();
+function money(n){return "₹"+Number(n).toLocaleString("en-IN",{maximumFractionDigits:2})}
+function save(){localStorage.setItem(KEY,JSON.stringify(invoices));render()}
+function addInvoice(){
+ const client=document.getElementById("client").value.trim();
+ if(!client){alert("Client name is required");return}
+ const fee=+document.getElementById("fee").value||0, expenses=+document.getElementById("expenses").value||0, gst=+document.getElementById("gst").value||0;
+ const subtotal=fee+expenses, total=subtotal+(fee*gst/100);
+ invoices.unshift({id:"INV-"+Date.now().toString().slice(-7),client,matter:document.getElementById("matter").value.trim(),date:document.getElementById("date").value,fee,expenses,gst,total,status:"Unpaid"});
+ document.getElementById("client").value="";document.getElementById("matter").value="";document.getElementById("fee").value=0;document.getElementById("expenses").value=0;
+ save();
+}
+function toggle(i){invoices[i].status=invoices[i].status==="Paid"?"Unpaid":"Paid";save()}
+function del(i){if(confirm("Delete this bill?")){invoices.splice(i,1);save()}}
+function render(){
+ document.getElementById("invoiceCount").textContent=invoices.length;
+ const billed=invoices.reduce((s,x)=>s+x.total,0), paid=invoices.filter(x=>x.status==="Paid").reduce((s,x)=>s+x.total,0);
+ document.getElementById("billed").textContent=money(billed);document.getElementById("paid").textContent=money(paid);document.getElementById("outstanding").textContent=money(billed-paid);
+ document.getElementById("list").innerHTML=invoices.map((x,i)=>`<tr><td>${x.id}</td><td>${x.client}</td><td>${x.matter||"-"}</td><td>${x.date||"-"}</td><td>${money(x.total)}</td><td>${x.status}</td><td><button class="secondary" onclick="toggle(${i})">${x.status==="Paid"?"Unpaid":"Mark Paid"}</button> <button onclick="del(${i})">Delete</button></td></tr>`).join("")||'<tr><td colspan="7" class="muted">No bills yet.</td></tr>';
+}
+render();
+</script>
+</body></html>
